@@ -1,0 +1,107 @@
+<?php $movies = json_decode(file_get_contents('movies.json'), true) ?? []; ?>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOVIE HUB - Home</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loader" style="position: fixed; width: 100%; height: 100%; background: #0b0d17; z-index: 9999; display: flex; align-items: center; justify-content: center;">
+    <div class="spinner"></div>
+</div>
+
+<header>
+    <?php if(file_exists('logo.png')): ?>
+        <img src="logo.png" alt="Movie Hub" style="height:50px; cursor:pointer;" onclick="location.href='index.php'">
+    <?php else: ?>
+        <h1 onclick="location.href='index.php'" style="cursor:pointer;">MOVIE <span>HUB</span></h1>
+    <?php endif; ?>
+</header>
+
+<div class="hero-banner">
+    <div class="hero-overlay"></div>
+    <div class="countdown-box" id="timer">🌙 Loading Countdown...</div>
+</div>
+
+<div class="container">
+    
+    <?php if(!empty($movies)): 
+        $trending = end($movies); 
+    ?>
+    <div class="trending-container" style="margin-bottom: 40px;">
+        <h2 style="border-left: 5px solid #e50914; padding-left: 10px; margin-bottom: 20px;">✨ Trending Now</h2>
+        <div class="trending-card" onclick="location.href='player.php?id=<?php echo $trending['id']; ?>'" style="position: relative; border-radius: 15px; overflow: hidden; cursor: pointer; border: 1px solid #333;">
+            <img src="<?php echo $trending['poster']; ?>" style="width: 100%; height: 300px; object-fit: cover; filter: brightness(0.5);">
+            <div style="position: absolute; bottom: 20px; left: 20px;">
+                <span style="background: #e50914; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold;">Trending #1</span>
+                <h2 style="margin: 10px 0;"><?php echo $trending['title']; ?></h2>
+                <button style="background: white; color: black; border: none; padding: 8px 20px; border-radius: 5px; font-weight: bold; cursor: pointer;">▶ Watch Now</button>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <div style="margin: 20px auto; max-width: 400px; background: rgba(229, 9, 20, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed #e50914; text-align: center;">
+    <p style="margin: 0; font-size: 14px; color: #ccc;">পছন্দের মুভি খুঁজে পাচ্ছেন না?</p>
+    <div style="display: inline-block; margin-top: 10px; background: #333; color: #888; padding: 8px 20px; border-radius: 5px; font-weight: bold; font-size: 13px; cursor: not-allowed;">
+        📥 Request Form (Coming Soon)
+    </div>
+    <p style="font-size: 11px; color: #e50914; margin-top: 8px; font-style: italic;">✨ ইদ রিলিজের পর এই ফিচারটি চালু করা হবে!</p>
+</div>
+        </div>
+    </div>
+
+    <h2 style="border-left: 5px solid #e50914; padding-left: 10px;">🔥 All Episodes</h2>
+    
+    <div class="movie-grid" id="movieGrid">
+        <?php foreach(array_reverse($movies) as $movie): ?>
+        <div class="movie-box" data-title="<?php echo $movie['title']; ?>" onclick="location.href='player.php?id=<?php echo $movie['id']; ?>'">
+            <img src="<?php echo $movie['poster']; ?>">
+            <div class="movie-info">
+                <div style="color: #e50914; font-size: 11px; font-weight: bold; margin-bottom: 5px;">
+                    <?php echo $movie['season'] ?? 'S1'; ?> | <?php echo $movie['episode'] ?? 'Ep 1'; ?>
+                </div>
+                <h3><?php echo $movie['title']; ?></h3>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+
+<footer style="text-align: center; padding: 40px; background: #000; border-top: 1px solid #333; margin-top: 50px;">
+    <p style="color: #888;">&copy; 2026 MOVIE HUB | All Rights Reserved.</p>
+    <a href="disclaimer.php" style="color: #e50914; text-decoration: none; font-size: 13px;">Copyright Disclaimer</a>
+</footer>
+
+<a href="https://m.me/your_fb_page" target="_blank" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Facebook_Messenger_logo_2020.svg" width="50" height="50">
+</a>
+
+<script>
+    function searchMovie() {
+        let input = document.getElementById('movieSearch').value.toLowerCase();
+        let cards = document.getElementsByClassName('movie-box');
+        for (let i = 0; i < cards.length; i++) {
+            let title = cards[i].getAttribute('data-title').toLowerCase();
+            cards[i].style.display = title.includes(input) ? "" : "none";
+        }
+    }
+
+    var countDownDate = new Date("June 16, 2026 10:00:00").getTime();
+    setInterval(function() {
+        var now = new Date().getTime();
+        var d = countDownDate - now;
+        var days = Math.floor(d / (1000 * 60 * 60 * 24));
+        var hours = Math.floor((d % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        var minutes = Math.floor((d % (1000 * 60 * 60)) / (1000 * 60));
+        document.getElementById("timer").innerHTML = "🌙 ইদ রিলিজ: " + days + "d " + hours + "h " + minutes + "m ";
+    }, 1000);
+
+    window.onload = function() { document.getElementById('loader').style.display = 'none'; };
+</script>
+
+</body>
+</html>
