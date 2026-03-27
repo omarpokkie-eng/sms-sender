@@ -1,0 +1,112 @@
+<?php
+session_start();
+$admin_pass = "ahad123"; // আপনার পাসওয়ার্ড
+
+if(isset($_POST['l'])){ if($_POST['p']==$admin_pass) $_SESSION['admin']=1; }
+if(!isset($_SESSION['admin'])) die('<body style="background:#0b0d17;color:white;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><form method="post" style="background:#1a1d29;padding:40px;border-radius:15px;border:1px solid #e50914;text-align:center;width:300px;"><h2 style="color:#e50914;margin-bottom:20px;">MOVIE HUB ADMIN</h2><input type="password" name="p" placeholder="Enter Password" style="width:100%;padding:12px;border-radius:5px;border:none;background:#2a2e3f;color:white;margin-bottom:20px;outline:none;"><br><button name="l" style="background:#e50914;color:white;padding:12px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;width:100%;">LOGIN</button></form></body>');
+
+$f = 'movies.json'; 
+$m = json_decode(file_get_contents($f), true) ?? [];
+
+// --- মুভি ও এপিসোড অ্যাড করার অংশ ---
+if(isset($_POST['add'])){
+    $m[] = [
+        "title" => $_POST['t'], 
+        "id" => $_POST['i'], 
+        "poster" => $_POST['p'], 
+        "cat" => $_POST['cat'],
+        "season" => $_POST['s'],
+        "episode" => $_POST['e']
+    ];
+    file_put_contents($f, json_encode($m, JSON_PRETTY_PRINT)); 
+    header("Location: admin.php?success=Movie Added");
+}
+
+// --- লোগো ও ব্যানার আপলোড করার অংশ ---
+if(isset($_POST['up_media'])){
+    $type = $_POST['media_type'];
+    $target_name = ($type == "logo") ? "logo.png" : "banner.jpg";
+    if(move_uploaded_file($_FILES["media_file"]["tmp_name"], $target_name)){
+        header("Location: admin.php?success=".ucfirst($type)." Updated");
+    }
+}
+
+// --- ডিলিট ও লগআউট ---
+if(isset($_GET['del'])){ unset($m[$_GET['del']]); file_put_contents($f, json_encode(array_values($m), JSON_PRETTY_PRINT)); header("Location: admin.php?success=Deleted"); }
+if(isset($_GET['logout'])){ session_destroy(); header("Location: admin.php"); }
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Hub - Ultimate Admin</title>
+    <style>
+        body { background:#0b0d17; color:#eee; font-family:sans-serif; margin:0; padding:15px; }
+        .container { max-width: 700px; margin: auto; }
+        .card { background:#1a1d29; padding:20px; border-radius:10px; border:1px solid #333; margin-bottom:20px; }
+        input, select { width:100%; padding:12px; margin:8px 0; border-radius:5px; border:1px solid #333; background:#2a2e3f; color:white; box-sizing: border-box; }
+        .btn { background:#e50914; color:white; padding:12px; border:none; border-radius:5px; width:100%; cursor:pointer; font-weight:bold; }
+        .btn-green { background:#28a745; }
+        .movie-item { display:flex; justify-content:space-between; background:#222; padding:10px; margin-bottom:5px; border-radius:5px; align-items:center; }
+        .alert { background: #28a745; color: white; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid red; padding-bottom:10px; margin-bottom:20px;">
+        <h2 style="margin:0;">🎬 Admin Panel</h2>
+        <a href="?logout" style="color:#aaa; text-decoration:none;">Logout 🔒</a>
+    </div>
+
+    <?php if(isset($_GET['success'])): ?>
+        <div class="alert"><?php echo $_GET['success']; ?>!</div>
+    <?php endif; ?>
+
+    <div class="card" style="border-color:#28a745;">
+        <h3>🖼️ Update Site Graphics</h3>
+        <form method="post" enctype="multipart/form-data">
+            <select name="media_type">
+                <option value="logo">Site Logo (logo.png)</option>
+                <option value="banner">Home Banner (banner.jpg)</option>
+            </select>
+            <input type="file" name="media_file" accept="image/*" required>
+            <button name="up_media" class="btn btn-green">UPLOAD NOW</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>➕ Add New Episode</h3>
+        <form method="post">
+            <input type="text" name="t" placeholder="Movie Title" required>
+            <div style="display:flex; gap:10px;">
+                <input type="text" name="s" placeholder="Season (Ex: S01)" required>
+                <input type="text" name="e" placeholder="Episode (Ex: Ep 01)" required>
+            </div>
+            <input type="text" name="i" placeholder="YouTube Video ID (Ex: NlVlU9XdK7Y)" required>
+            <input type="text" name="p" placeholder="Poster Image URL" required>
+            <select name="cat">
+                <option>Anime</option>
+                <option>Action</option>
+                <option>Special</option>
+            </select>
+            <button name="add" class="btn">PUBLISH MOVIE</button>
+        </form>
+    </div>
+
+    <h3>📜 Existing Episodes</h3>
+    <?php foreach($m as $k=>$v): ?>
+    <div class="movie-item">
+        <div>
+            <strong><?php echo $v['title']; ?></strong><br>
+            <small style="color:#888;"><?php echo $v['season']; ?> | <?php echo $v['episode']; ?></small>
+        </div>
+        <a href="?del=<?php echo $k; ?>" style="color:#ff4d4d; text-decoration:none; font-weight:bold;" onclick="return confirm('Delete this?')">Delete</a>
+    </div>
+    <?php endforeach; ?>
+</div>
+
+</body>
+</html>
